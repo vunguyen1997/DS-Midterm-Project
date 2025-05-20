@@ -35,7 +35,6 @@ def json_extraction(direc='../data'):
             data = file_data['data']['results']
             results.append(data)
             count+=1
-    print(f'House information extracted from the {count} JSON files in data folder')
     return results
 
 results = json_extraction()
@@ -50,6 +49,6 @@ def normalized_dataframe(results):
     df = pd.concat(df_set)
     return df
 
-def drop_columns(dataframe = {},drop_attributes = []):
+def del_columns(dataframe,drop_attributes):
     refined_df = dataframe.drop(columns= drop_attributes)
     return refined_df
