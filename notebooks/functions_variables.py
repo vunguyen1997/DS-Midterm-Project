@@ -2,24 +2,53 @@
 import pandas as pd
 import numpy as np
 import os
+from collections import Counter
 import json
 
-def encode_tags(df):
+# Filters out tags from the datataframe that appear less than count_num amount of times
+def remove_infrequent_tags(dataframe, column, count_num):
+    # Flatten list values, skipping nulls
+    flat_tags = [item for sublist in dataframe[column].dropna() for item in sublist]
 
-    """Use this function to manually encode tags from each sale.
-    You could also provide another argument to filter out low 
-    counts of tags to keep cardinality to a minimum.
-       
-    Args:
-        pandas.DataFrame
+    # Count using Counter
+    tag_counts = Counter(flat_tags)
+    
+    # Filter tags that appear less than count_num times
+    tags_to_remove = {tag for tag, count in tag_counts.items() if count < count_num}
 
-    Returns:
-        pandas.DataFrame: modified with encoded tags
-    """
-    tags = df["tags"].tolist()
-    # create a unique list of tags and then create a new column for each tag
-        
-    return df
+    # getting rid of tags that are under count_num frequency
+    dataframe.loc[:,column] = dataframe[column].apply(
+        lambda x: [tag for tag in x if tag not in tags_to_remove] if isinstance(x, list) else x
+    )
+    new_df = dataframe
+    return new_df
+
+# Filter the dataframe column you want to get the top tags out of, optional arguement to allow you to additionally drop certain tags from the top list incase you want to remove redundant/unimportant tags
+def get_important_tags(dataframe, column, droplist=None):
+    # Count all tags across rows, skipping nulls
+    tag_counts = Counter(tag for tags in dataframe[column].dropna() for tag in tags)
+    
+    # Get top 20 most common tags
+    common_tags = [tag for tag, count in tag_counts.most_common(20)]
+    
+    # If a droplist is provided, filter those out
+    if droplist is not None:
+        common_tags = [tag for tag in common_tags if tag not in droplist]
+
+    return common_tags
+
+
+# Function takes the tags from important_tags that appear in column_to_encode and encodes the tags in the dataframe, then optionally drops the initial tags column if you choose to
+def encode_tags(dataframe, column_to_encode, important_tags, drop_column=False):
+    for tag in important_tags:
+        dataframe[f'tag_{tag}'] = dataframe[column_to_encode].apply(
+        lambda x: int(tag in x) if isinstance(x, list) else 0
+    )
+    if drop_column:
+        dataframe = dataframe.drop(column_to_encode, axis=1)
+
+    return dataframe  
+    
 
 # Extract house data from all JSON files in data folder
 def json_extraction(direc='../data'):
