@@ -85,9 +85,9 @@ def del_column_null_values(dataframe, drop_column_rows):
     new_df = dataframe.dropna(subset=drop_column_rows)
     return new_df
 
-# fill null values in columns with 0
-def fill_column_null_values(dataframe, columns_fill):
+# fill null values in columns with anoter value
+def fill_column_null_values(dataframe, columns_fill, value=0):
     for col in columns_fill:
-        dataframe.loc[:, col] = dataframe[col].fillna(0)
+        dataframe.loc[:, col] = dataframe[col].fillna(value)
     filled_df = dataframe
     return filled_df
