@@ -91,3 +91,53 @@ def fill_column_null_values(dataframe, columns_fill, value=0):
         dataframe.loc[:, col] = dataframe[col].fillna(value)
     filled_df = dataframe
     return filled_df
+
+# develop functions for Part 3
+import itertools
+from sklearn.model_selection import KFold
+from sklearn.ensemble     import RandomForestRegressor
+from sklearn.metrics      import mean_squared_error
+
+def custom_cross_validation(training_data, n_splits=5):
+    kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
+    train_folds, val_folds = [], []
+    for train_idx, val_idx in kf.split(training_data):
+        train_folds.append(training_data.iloc[train_idx])
+        val_folds.append(  training_data.iloc[val_idx])
+    return train_folds, val_folds
+
+def hyperparameter_search(training_folds, validation_folds, param_grid):
+    # 1) Generate hyperparam combos
+    param_names   = list(param_grid.keys())
+    hyperparams   = list(itertools.product(*param_grid.values()))
+    
+    hyperparam_scores = []  # store avg RMSE for each combo
+
+    # 2) Loop through each hyperparam combination
+    for combo in hyperparams:
+        params = dict(zip(param_names, combo))
+        scores = []  # one RMSE per fold
+
+        # 3) Loop through each fold
+        for train_df, val_df in zip(training_folds, validation_folds):
+            # assume last column is target
+            target = train_df.columns[-1]
+            X_tr, y_tr = train_df.drop(target, axis=1), train_df[target]
+            X_va, y_va = val_df.drop(target, axis=1), val_df[target]
+
+            model = RandomForestRegressor(random_state=42, **params)
+            model.fit(X_tr, y_tr)
+            preds = model.predict(X_va)
+
+            rmse = np.sqrt(mean_squared_error(y_va, preds))
+            scores.append(rmse)
+
+        # average across folds
+        avg_score = np.mean(scores)
+        hyperparam_scores.append(avg_score)
+
+    # 4) Find the index of the best (lowest) RMSE
+    best_idx    = int(np.argmin(hyperparam_scores))
+    best_params = dict(zip(param_names, hyperparams[best_idx]))
+
+    return best_params
