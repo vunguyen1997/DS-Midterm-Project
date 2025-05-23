@@ -94,9 +94,11 @@ def fill_column_null_values(dataframe, columns_fill, value=0):
 
 # develop functions for Part 3
 import itertools
+from sklearn.pipeline import Pipeline
+from sklearn.impute import SimpleImputer
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import KFold
-from sklearn.ensemble     import RandomForestRegressor
-from sklearn.metrics      import mean_squared_error
+from sklearn.metrics import mean_squared_error
 
 def custom_cross_validation(training_data, n_splits=5):
     kf = KFold(n_splits=n_splits, shuffle=True, random_state=42)
@@ -141,3 +143,4 @@ def hyperparameter_search(training_folds, validation_folds, param_grid):
     best_params = dict(zip(param_names, hyperparams[best_idx]))
 
     return best_params
+
